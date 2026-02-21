@@ -44,58 +44,36 @@ The user may have multiple Pine tasks running at the same time (e.g., one sessio
 Before any operation, check if already authenticated:
 
 ```bash
-pine auth status
+pine auth status --json
 ```
 
-If not logged in, run the auth flow. **Ask the user for their Pine AI account email** (sign up at https://19pine.ai).
+If the `authenticated` field is `false`, run the auth flow. **Ask the user for their Pine AI account email** (sign up at https://19pine.ai).
 
 ### Step 1: Request verification code
+
+```bash
+pine auth request --email USER_EMAIL
+```
+
+This sends a verification code and outputs JSON with a `request_token`. Tell the user: *"A verification code has been sent to your email. Check your inbox (and spam) and give me the code."*
+
+### Step 2: Verify code and save credentials
+
+Once the user provides the code:
+
+```bash
+pine auth verify --email USER_EMAIL --request-token REQUEST_TOKEN --code CODE
+```
+
+This verifies the code and saves credentials to `~/.pine/config.json` automatically.
+
+### Interactive login (alternative for human users)
 
 ```bash
 pine auth login
 ```
 
-This prompts for email and sends a verification code. Tell the user: *"A verification code has been sent to your email. Check your inbox (and spam) and give me the code."*
-
-The command will then prompt for the code interactively.
-
-### Non-interactive auth (for scripted environments)
-
-If the interactive prompt doesn't work, use the Pine Assistant Python SDK directly:
-
-```bash
-python3 -c "
-from pine_assistant.client import AsyncPineAI
-import asyncio, json
-async def main():
-    client = AsyncPineAI(base_url='https://www.19pine.ai')
-    result = await client.auth.request_code('USER_EMAIL')
-    print(json.dumps(result))
-asyncio.run(main())
-"
-```
-
-Save the `request_token`, ask the user for the code, then verify:
-
-```bash
-python3 -c "
-from pine_assistant.client import AsyncPineAI
-import asyncio, json
-async def main():
-    client = AsyncPineAI(base_url='https://www.19pine.ai')
-    result = await client.auth.verify_code('USER_EMAIL', 'CODE', 'REQUEST_TOKEN')
-    print(json.dumps(result))
-asyncio.run(main())
-"
-```
-
-The response contains `access_token`, `id`, and `email`. Write credentials to `~/.pine/config.json`, mapping `id` to `user_id`:
-
-```json
-{"access_token": "TOKEN", "user_id": "ID_FROM_RESPONSE", "email": "USER_EMAIL", "base_url": "https://www.19pine.ai"}
-```
-
-**Important:** The API returns the field as `id`, but the config file must use `user_id`.
+This interactive version prompts for email and code. It requires stdin access and may not work in all agent/scripted environments — prefer `request` + `verify` above.
 
 ### Token refresh
 
@@ -299,8 +277,13 @@ pine task stop SESSION_ID     # stop a running task
 Send a single message and get Pine's response:
 
 ```bash
-pine send "Cancel my Netflix subscription" --json
 pine send "What's the status?" --session SESSION_ID --json
+```
+
+Without `--session`, a new session is created automatically and the session ID is emitted as the first JSON event (`{"type": "session_created", "data": {"session_id": "..."}}`):
+
+```bash
+pine send "Cancel my Netflix subscription" --json
 ```
 
 ## Best practices for agents
@@ -346,4 +329,4 @@ See the `pine-voice` skill for full voice call documentation.
 
 ## Privacy
 
-Pine processes task data on Pine AI's servers. Credentials are stored locally at `~/.pine/config.json`. See https://19pine.ai/privacy for data handling policies.
+Pine processes task data on Pine AI's servers. Credentials are stored locally at `~/.pine/config.json`. See https://www.19pine.ai/page/privacy-policy for data handling policies.
