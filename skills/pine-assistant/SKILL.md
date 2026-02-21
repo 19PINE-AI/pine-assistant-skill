@@ -97,7 +97,7 @@ If the user mentions anything that could relate to an existing Pine task — a c
 
 1. **Always** run `pine sessions list --json` to find matching sessions. Search by title or any keyword the user mentioned.
 2. Check the session's **state**:
-   - **Active** (`chat`, `task_processing`, etc.) → resume it. Send follow-up messages with `pine send "..." --session SESSION_ID --json`.
+   - **Active** (`chat`, `task_processing`, etc.) → resume it. Send follow-up messages with `pine send "..." -s SESSION_ID --json`.
    - **Finished** (`task_finished`, `task_cancelled`, etc.) → do NOT continue in that session. Instead, check its details for context, then create a **new session** and reference what you learned. This gives Pine a fresh task context while preserving continuity for the user.
 
 **Never say "I don't have context" or "Can you remind me?"** — the session list is always available. Look it up.
@@ -110,16 +110,19 @@ If the user mentions anything that could relate to an existing Pine task — a c
    - If an existing **active** session matches → resume it (see "Resuming" above).
    - If an existing session matches but is **finished** → read its details for context, then create a new session and include that context in your first message.
    - If no match → proceed to create.
-2. Create a new session:
+2. Create a session and send the user's request in one step:
+
+```bash
+pine send "Negotiate my Comcast bill down. Account holder: Jane Doe, account #12345. Current bill is $120/mo, target is $80/mo. 10-year customer." --new --json
+```
+
+The `--new` flag creates a session and returns a `session_created` JSON event with the `session_id` before streaming the response. Save this ID for follow-ups.
+
+Alternatively, create the session separately first:
 
 ```bash
 pine sessions create --json
-```
-
-3. Send the user's request:
-
-```bash
-pine send "Negotiate my Comcast bill down. Account holder: Jane Doe, account #12345. Current bill is $120/mo, target is $80/mo. 10-year customer." --session SESSION_ID --json
+pine send "Negotiate my Comcast bill down." -s SESSION_ID --json
 ```
 
 4. Tell the user the session link: `https://www.19pine.ai/app/chat/SESSION_ID`
@@ -130,7 +133,7 @@ pine send "Negotiate my Comcast bill down. Account holder: Jane Doe, account #12
 Pine will research the request and ask for details. Poll for responses:
 
 ```bash
-pine send "checking in" --session SESSION_ID --json
+pine send "checking in" -s SESSION_ID --json
 ```
 
 You will receive:
@@ -205,7 +208,7 @@ Do NOT proceed until the user has answered. If they give partial answers, ask ab
 Reply to Pine with the field values via `pine send`:
 
 ```bash
-pine send "Full Name on Account: Jane Doe, Service Address: 123 Main St, Phone: +14155551234, Current Monthly Bill: 120" --session SESSION_ID --json
+pine send "Full Name on Account: Jane Doe, Service Address: 123 Main St, Phone: +14155551234, Current Monthly Bill: 120" -s SESSION_ID --json
 ```
 
 **NEVER fill forms autonomously with guessed preferences.** Wrong answers will cause the task to fail.
@@ -274,16 +277,16 @@ pine task stop SESSION_ID     # stop a running task
 
 ## One-shot Message
 
-Send a single message and get Pine's response:
+Send a single message to an existing session:
 
 ```bash
-pine send "What's the status?" --session SESSION_ID --json
+pine send "What's the status?" -s SESSION_ID --json
 ```
 
-Without `--session`, a new session is created automatically and the session ID is emitted as the first JSON event (`{"type": "session_created", "data": {"session_id": "..."}}`):
+Create a new session and send in one step (the session ID is emitted as the first JSON event `{"type": "session_created", "data": {"session_id": "..."}}`):
 
 ```bash
-pine send "Cancel my Netflix subscription" --json
+pine send "Cancel my Netflix subscription" --new --json
 ```
 
 ## Best practices for agents
