@@ -11,7 +11,7 @@ openclaw skills install pine-assistant
 The skill requires the `pine` CLI:
 
 ```bash
-pip install pine-cli
+pip install pineai-cli
 ```
 
 ## What it does
@@ -34,4 +34,4 @@ Authentication is handled interactively via `pine auth login` — email verifica
 ## Also see
 
 - [pine-voice](https://clawhub.ai/pineclaw/pine-voice) — Direct phone calls via Pine AI voice agent
-- [Pine CLI](https://github.com/pineclaw/pine-cli) — The unified CLI this skill wraps
+- [Pine CLI](https://github.com/19PINE-AI/pineai-cli) — The unified CLI this skill wraps
