@@ -4,7 +4,7 @@
   "description": "Your agent creates Pine AI sessions, sends tasks, handles forms, starts execution, and reports results — all through the pine CLI. Negotiate bills, cancel subscriptions, make reservations, resolve disputes, and more. Built-in email auth flow — no env vars or manual token setup needed.",
   "category": "productivity",
   "tags": ["pine-ai", "customer-service", "assistant", "negotiation", "reservations", "billing"],
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "MIT",
   "credentials": {
     "pine-ai": {
