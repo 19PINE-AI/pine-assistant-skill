@@ -97,7 +97,7 @@ If the user mentions anything that could relate to an existing Pine task — a c
 
 1. **Always** run `pine sessions list --json` to find matching sessions. Search by title or any keyword the user mentioned.
 2. Check the session's **state**:
-   - **Active** (`chat`, `task_processing`, etc.) → resume it. Send follow-up messages with `pine send "..." -s SESSION_ID --json`.
+   - **Active** (`chat`, `task_processing`, etc.) → resume it. Send follow-up messages with `pine send "..." -s SESSION_ID --no-wait --json`.
    - **Finished** (`task_finished`, `task_cancelled`, etc.) → do NOT continue in that session. Instead, check its details for context, then create a **new session** and reference what you learned. This gives Pine a fresh task context while preserving continuity for the user.
 
 **Never say "I don't have context" or "Can you remind me?"** — the session list is always available. Look it up.
@@ -113,16 +113,16 @@ If the user mentions anything that could relate to an existing Pine task — a c
 2. Create a session and send the user's request in one step:
 
 ```bash
-pine send "Negotiate my Comcast bill down. Account holder: Jane Doe, account #12345. Current bill is $120/mo, target is $80/mo. 10-year customer." --new --json
+pine send "Negotiate my Comcast bill down. Account holder: Jane Doe, account #12345. Current bill is $120/mo, target is $80/mo. 10-year customer." --new --no-wait --json
 ```
 
-The `--new` flag creates a session and returns a `session_created` JSON event with the `session_id` before streaming the response. Save this ID for follow-ups.
+The `--new` flag creates a session and returns a `session_created` JSON event with the `session_id`. Save this ID for follow-ups. The `--no-wait` flag sends the message without blocking for Pine's response (fire-and-forget) — **always use `--no-wait` to avoid hanging**.
 
 Alternatively, create the session separately first:
 
 ```bash
 pine sessions create --json
-pine send "Negotiate my Comcast bill down." -s SESSION_ID --json
+pine send "Negotiate my Comcast bill down." -s SESSION_ID --no-wait --json
 ```
 
 4. Tell the user the session link: `https://www.19pine.ai/app/chat/SESSION_ID`
@@ -130,10 +130,16 @@ pine send "Negotiate my Comcast bill down." -s SESSION_ID --json
 
 ### Phase 2: Information gathering
 
-Pine will research the request and ask for details. Poll for responses:
+Pine will research the request and ask for details. Poll for conversation messages (includes both metadata and history):
 
 ```bash
-pine send "checking in" -s SESSION_ID --json
+pine sessions get SESSION_ID --json
+```
+
+To send follow-up messages:
+
+```bash
+pine send "checking in" -s SESSION_ID --no-wait --json
 ```
 
 You will receive:
@@ -162,7 +168,7 @@ After Pine has enough information, it will indicate one of these billing states:
 
 ### Phase 4: Task execution
 
-The task runs asynchronously (Pine makes calls, sends emails, automates browsers, etc.). Monitor progress:
+The task runs asynchronously (Pine makes calls, sends emails, automates browsers, etc.). Poll for state and conversation updates:
 
 ```bash
 pine sessions get SESSION_ID --json
@@ -208,7 +214,7 @@ Do NOT proceed until the user has answered. If they give partial answers, ask ab
 Reply to Pine with the field values via `pine send`:
 
 ```bash
-pine send "Full Name on Account: Jane Doe, Service Address: 123 Main St, Phone: +14155551234, Current Monthly Bill: 120" -s SESSION_ID --json
+pine send "Full Name on Account: Jane Doe, Service Address: 123 Main St, Phone: +14155551234, Current Monthly Bill: 120" -s SESSION_ID --no-wait --json
 ```
 
 **NEVER fill forms autonomously with guessed preferences.** Wrong answers will cause the task to fail.
@@ -249,10 +255,11 @@ pine sessions list --state task_finished --limit 5 --json
 pine sessions list --state task_processing --json
 ```
 
-### Get session details
+### Get session details and conversation history
 
 ```bash
 pine sessions get SESSION_ID --json
+pine sessions get SESSION_ID --limit 10 --json
 ```
 
 ### Create a session
@@ -277,17 +284,19 @@ pine task stop SESSION_ID     # stop a running task
 
 ## One-shot Message
 
-Send a single message to an existing session:
+Send a single message to an existing session (fire-and-forget):
 
 ```bash
-pine send "What's the status?" -s SESSION_ID --json
+pine send "What's the status?" -s SESSION_ID --no-wait --json
 ```
 
 Create a new session and send in one step (the session ID is emitted as the first JSON event `{"type": "session_created", "data": {"session_id": "..."}}`):
 
 ```bash
-pine send "Cancel my Netflix subscription" --new --json
+pine send "Cancel my Netflix subscription" --new --no-wait --json
 ```
+
+Omit `--no-wait` to stream Pine's response events (interactive use only — may block for up to 2 minutes).
 
 ## Best practices for agents
 
