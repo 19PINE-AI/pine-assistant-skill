@@ -4,13 +4,23 @@
   "description": "Your agent creates Pine AI sessions, sends tasks, handles forms, starts execution, and reports results — all through the pine CLI. Negotiate bills, cancel subscriptions, make reservations, resolve disputes, and more. Built-in email auth flow — no env vars or manual token setup needed.",
   "category": "productivity",
   "tags": ["pine-ai", "customer-service", "assistant", "negotiation", "reservations", "billing"],
-  "version": "1.1.0",
+  "version": "1.2.0",
   "license": "MIT",
+  "install": {
+    "pip": {
+      "package": "pineai-cli"
+    }
+  },
   "credentials": {
     "pine-ai": {
-      "description": "Pine AI account (Pro subscription for task execution). The skill handles authentication interactively via email verification — no manual token setup required.",
-      "url": "https://19pine.ai"
+      "description": "Pine AI account (Pro subscription for task execution). The skill authenticates via email verification and stores an access token, user ID, and email locally at ~/.pine/config.json.",
+      "url": "https://19pine.ai",
+      "config_path": "~/.pine/config.json"
     }
+  },
+  "persistence": {
+    "config_paths": ["~/.pine/config.json"],
+    "description": "The pine CLI stores authentication credentials (access token, user ID, email) at ~/.pine/config.json. This file is created during the auth flow and persists across sessions."
   },
   "support": {
     "url": "https://pineclaw.com",
